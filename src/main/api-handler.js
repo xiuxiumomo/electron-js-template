@@ -4,7 +4,7 @@ import axios from "axios";
 
 // 创建 axios 实例
 const api = axios.create({
-  baseURL: "http://apiwebjst.cbi360.net", // 统一接口前缀
+  baseURL: "", // 统一接口前缀
   timeout: 10000,
 });
 
