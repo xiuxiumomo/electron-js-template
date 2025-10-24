@@ -1,8 +1,10 @@
 import { app, shell, BrowserWindow, ipcMain } from "electron";
 import { join } from "path";
+import { enable, initialize } from "@electron/remote/main";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import "./api-handler.js";
+import { setupWindowControls } from "./window-controls.js";
 function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -14,9 +16,14 @@ function createWindow() {
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       sandbox: false,
-    },
-  });
 
+      contextIsolation: true, // 保持上下文隔离
+      enableRemoteModule: true, // 启用 remote 模块
+    },
+    //是否显示最上面的导航
+    frame: false,
+  });
+  enable(mainWindow.webContents); // 初始化 @electron/remote
   mainWindow.on("ready-to-show", () => {
     mainWindow.show();
   });
@@ -39,6 +46,9 @@ function createWindow() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
+// Initialize @electron/remote
+initialize();
+
 app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId("com.electron");
@@ -48,10 +58,14 @@ app.whenReady().then(() => {
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on("browser-window-created", (_, window) => {
     optimizer.watchWindowShortcuts(window);
+    enable(window.webContents);
   });
 
   // IPC test
   ipcMain.on("ping", () => console.log("pong"));
+
+  // Setup window controls
+  setupWindowControls();
 
   createWindow();
 
